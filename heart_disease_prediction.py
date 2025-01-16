@@ -1,26 +1,49 @@
-import streamlit as st
+# Import libraries
+import pandas as pd
 import numpy as np
-import pickle
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# Load the trained model
-with open("heart_disease_model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Load the dataset
+data = pd.read_csv('data/heart_disease.csv')
 
-st.title("Heart Disease Prediction")
+# Exploratory Data Analysis (EDA)
+print(data.head())
+print(data.describe())
 
-# Input fields
-age = st.number_input("Age", min_value=20, max_value=100, value=50)
-sex = st.selectbox("Sex", [0, 1])  # 0: Female, 1: Male
-chol = st.number_input("Cholesterol", min_value=100, max_value=600, value=200)
+# Check for missing values
+print(data.isnull().sum())
 
-# Convert input to NumPy array
-features = np.array([[age, sex, chol]])
+# Data Preprocessing
+# Features and target variable
+X = data.drop('target', axis=1)
+y = data['target']
 
-# Predict button
-if st.button("Predict"):
-    prediction = model.predict(features)
-    if prediction[0] == 1:
-        st.error("You may have heart disease. Consult a doctor.")
-    else:
-        st.success("You are healthy!")
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Standardize the data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train a model (Random Forest Classifier)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Visualize the confusion matrix
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt="d", cmap='Blues')
+plt.title("Confusion Matrix")
+plt.show()
