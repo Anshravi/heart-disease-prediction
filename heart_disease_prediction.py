@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 
 # Step 1: Load the Dataset (Replace 'heart.csv' with the actual dataset path)
-data = pd.read_csv('C:\Users\anshr\OneDrive\Desktop')
+data = pd.read_csv(r'C:\Users\anshr\OneDrive\Desktop\heart.csv')
 
 # Step 2: Preprocess the Data
 # Assuming the dataset has a 'target' column as the label
