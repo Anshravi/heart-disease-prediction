@@ -1,49 +1,47 @@
-# Import libraries
 import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# Load the dataset
-data = pd.read_csv('data/heart_disease.csv')
+# Step 1: Load the Dataset (Replace 'heart.csv' with the actual dataset path)
+data = pd.read_csv('heart.csv')
 
-# Exploratory Data Analysis (EDA)
-print(data.head())
-print(data.describe())
-
-# Check for missing values
-print(data.isnull().sum())
-
-# Data Preprocessing
-# Features and target variable
-X = data.drop('target', axis=1)
+# Step 2: Preprocess the Data
+# Assuming the dataset has a 'target' column as the label
 y = data['target']
+X = data.drop(columns=['target'])
 
-# Train-test split
+# Step 3: Standardize the Features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Step 4: Split the Data into Training and Testing Sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Standardize the data
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# Step 5: Tune Hyperparameters for Logistic Regression
+param_grid = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'solver': ['liblinear', 'lbfgs'],
+    'max_iter': [100, 500, 1000]
+}
 
-# Train a model (Random Forest Classifier)
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
+grid_search = GridSearchCV(LogisticRegression(random_state=42), param_grid, cv=5, scoring='accuracy')
+grid_search.fit(X_train, y_train)
 
-# Make predictions
-y_pred = model.predict(X_test)
+# Best Parameters
+best_params = grid_search.best_params_
+print(f"Best Hyperparameters: {best_params}")
 
-# Evaluate the model
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
-print("\nClassification Report:\n", classification_report(y_test, y_pred))
+# Step 6: Train the Optimized Logistic Regression Model
+best_model = grid_search.best_estimator_
+best_model.fit(X_train, y_train)
 
-# Visualize the confusion matrix
-sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt="d", cmap='Blues')
-plt.title("Confusion Matrix")
-plt.show()
+# Step 7: Make Predictions
+y_pred = best_model.predict(X_test)
+
+# Step 8: Evaluate the Model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Optimized Model Accuracy: {accuracy:.2f}")
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred))
